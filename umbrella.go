@@ -339,15 +339,15 @@ func (u Umbrella) ConfirmEmail(key string) *ErrUmbrella {
 
 func (u Umbrella) GetUserOperationAllowedTypes(i int64, o int) (map[string]bool, error) {
 	perms, err := u.orm.Get(func() interface{} { return &Permission{} }, []string{"Flags", "ASC"}, 30, 0, map[string]interface{}{
-			"_raw": []interface{}{
-				"(.ForType=? OR (.ForType=? AND .ForItem=?)) AND .Ops&?>0",
-				ForTypeEveryone,
-				ForTypeUser,
-				i,
-				o,
-			},
-			"_rawConjuction": sdb.RawConjuctionOR,
-		}, nil)
+		"_raw": []interface{}{
+			"(.ForType=? OR (.ForType=? AND .ForItem=?)) AND .Ops&?>0",
+			ForTypeEveryone,
+			ForTypeUser,
+			i,
+			o,
+		},
+		"_rawConjuction": sdb.RawConjuctionOR,
+	}, nil)
 	if err != nil {
 		return map[string]bool{}, err
 	}
