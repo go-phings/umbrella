@@ -6,4 +6,5 @@ Package umbrella is meant to work as a authentication mechanism for HTTP endpoin
 
 ## Example usage
 
-TODO.
+Have a butcher's at `main_test.go` to see a sample usage.
+
