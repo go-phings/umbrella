@@ -70,20 +70,20 @@ To do the above:
 2. create new `&umbrella.Interfaces` object with `User` field and attach it to `Interfaces` field of umbrella controller.
 
 ## Features
-- [X] Wrapper for any HTTP handler
-- [X] Data stored in PostgreSQL database by default
-- [X] Custom database driver and ORM
-- [X] Custom User model
-- [X] Disableable endpoints for sign in (that create a session object with access token) and sign out (that deactivated the session and token)
-- [X] Disableable Endpoints for registering and activating user
-- [X] Hooks after successful actions such as registration, sign in etc.
-- [X] Use of cookie instead of authorization header
-- [X] Redirection header for successful and failed sign in attempts
-- [X] User struct validation when registering new user
-- [X] Custom tag name for field validation
+- [X] Wrapper support for any HTTP handler  
+- [X] Data storage in PostgreSQL database by default  
+- [X] Customisable database driver and ORM  
+- [X] Flexible User model  
+- [X] Optional endpoints for sign-in (creating session objects with access tokens) and sign-out (deactivating sessions and tokens)  
+- [X] Optional endpoints for user registration and activation  
+- [X] Hooks triggered after successful actions like registration or sign-in  
+- [X] Option to use cookies instead of the authorisation header  
+- [X] Support for redirection headers after successful or failed sign-in attempts  
+- [X] User struct validation during user registration  
+- [X] Customisable tag names for field validation  
 
 ### Roadmap
-- [ ] Simple permissions
+- [ ] Simple permission system
 
 ## Motivation
 While building a backend REST API for a colleague in retail, I needed a simple way to secure HTTP endpoints with basic authentication. The goal was straightforward: users would log in with an email and password, receive a token with an expiration time, and use it to interact with the backend API. A frontend application handled this flow.
