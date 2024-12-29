@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	sdb "github.com/go-phings/struct-db-postgres"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )

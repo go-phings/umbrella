@@ -3,8 +3,8 @@ module github.com/go-phings/umbrella
 go 1.23.4
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-phings/struct-db-postgres v0.7.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/ory/dockertest/v3 v3.11.0
