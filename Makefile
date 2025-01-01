@@ -8,7 +8,7 @@ test: ## Runs tests
 run-example1: ## Runs sample app
 	echo "* Creating docker container with PostgreSQL"
 	docker rm -f sample-app-db
-	docker run --name sample-app-db -d -e POSTGRES_PASSWORD=protopass -e POSTGRES_USER=protouser -e POSTGRES_DB=protodb -p 54320:5432 postgres:13
+	docker run --name sample-app-db -d -e POSTGRES_PASSWORD=upass -e POSTGRES_USER=uuser -e POSTGRES_DB=udb -p 54321:5432 postgres:13
 	echo "* Sleeping for 10 seconds to give database time to initialize..."
 	sleep 10
 	echo "* Building and starting application..."

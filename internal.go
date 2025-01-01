@@ -85,7 +85,7 @@ func (u Umbrella) handleConfirm(w http.ResponseWriter, r *http.Request) {
 
 	err2 := u.ConfirmEmail(key)
 	if err2 != nil {
-		var errUmb *ErrUmbrella
+		var errUmb ErrUmbrella
 		if errors.As(err2, &errUmb) {
 			if errUmb.Op == "NoRow" || errUmb.Op == "UserInactive" {
 				u.writeErrText(w, http.StatusNotFound, "invalid_key")
@@ -146,7 +146,7 @@ func (u Umbrella) handleLogin(w http.ResponseWriter, r *http.Request, setCookie 
 
 	token, expiresAt, err := u.login(email, password)
 	if err != nil {
-		var errUmb *ErrUmbrella
+		var errUmb ErrUmbrella
 		if errors.As(err, &errUmb) {
 			if errUmb.Op == "NoRow" || errUmb.Op == "UserInactive" || errUmb.Op == "InvalidPassword" {
 				if failureURI != "" {
@@ -216,7 +216,7 @@ func (u Umbrella) handleCheck(w http.ResponseWriter, r *http.Request) {
 
 	token2, expiresAt, _, err := u.check(token, refresh)
 	if err != nil {
-		var errUmb *ErrUmbrella
+		var errUmb ErrUmbrella
 		if errors.As(err, &errUmb) {
 			if errUmb.Op == "InvalidToken" || errUmb.Op == "UserInactive" || errUmb.Op == "Expired" || errUmb.Op == "InvalidSession" || errUmb.Op == "InvalidUser" || errUmb.Op == "ParseToken" {
 				u.writeErrText(w, http.StatusNotFound, "invalid_credentials")
@@ -297,7 +297,7 @@ func (u Umbrella) handleLogout(w http.ResponseWriter, r *http.Request, useCookie
 
 	err := u.logout(token)
 	if err != nil {
-		var errUmb *ErrUmbrella
+		var errUmb ErrUmbrella
 		if errors.As(err, &errUmb) {
 			if errUmb.Op == "InvalidToken" || errUmb.Op == "Expired" || errUmb.Op == "ParseToken" || errUmb.Op == "InvalidSession" {
 				if successURI != "" {

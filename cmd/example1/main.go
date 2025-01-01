@@ -8,7 +8,7 @@ import (
 	"github.com/go-phings/umbrella"
 )
 
-const dbDSN = "host=localhost user=protouser password=protopass port=54320 dbname=protodb sslmode=disable"
+const dbDSN = "host=localhost user=uuser password=upass port=54321 dbname=udb sslmode=disable"
 const tblPrefix = "p_"
 
 func main() {

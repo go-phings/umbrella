@@ -302,7 +302,6 @@ func (u Umbrella) CreateUser(email string, pass string, extraFields map[string]s
 func (u Umbrella) ConfirmEmail(key string) error {
 	user := u.Interfaces.User()
 	got, err := user.GetByEmailActivationKey(key)
-
 	if !got {
 		if err == nil {
 			return ErrUmbrella{
@@ -328,6 +327,7 @@ func (u Umbrella) ConfirmEmail(key string) error {
 	user.SetEmailActivationKey("")
 	err = user.Save()
 	if err != nil {
+		log.Print("save to db err")
 		return ErrUmbrella{
 			Op:  "SaveToDB",
 			Err: err,
