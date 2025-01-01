@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-phings/umbrella"
+	_ "github.com/lib/pq"
 )
 
 const dbDSN = "host=localhost user=uuser password=upass port=54321 dbname=udb sslmode=disable"
@@ -47,5 +48,25 @@ func main() {
 	// /umbrella/{login,logout,register,confirm}
 	http.Handle("/umbrella/", u.GetHTTPHandler("/umbrella/"))
 
+	// secret stuff
+	http.Handle("/secret_stuff/", u.GetHTTPHandlerWrapper(secretStuff(), umbrella.HandlerConfig{}))
+
 	log.Fatal(http.ListenAndServe(":8001", nil))
+}
+
+func secretStuff() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := umbrella.GetUserIDFromRequest(r)
+		switch userID {
+		case 1: 
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("SecretStuffOnlyForAdmin"))
+		case 0:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("YouHaveToBeLoggedIn"))
+		default:
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("SecretStuffForOtherUser"))
+		}
+	})
 }
