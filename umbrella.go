@@ -119,11 +119,11 @@ func NewUmbrella(dbConn *sql.DB, tblPrefix string, jwtConfig *JWTConfig, cfg *Um
 	return u
 }
 
-func (u Umbrella) CreateDBTables() *ErrUmbrella {
+func (u Umbrella) CreateDBTables() error {
 	user := u.Interfaces.User()
 	err := user.CreateDBTable()
 	if err != nil {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "CreateDBTables",
 			Err: err,
 		}
@@ -131,7 +131,7 @@ func (u Umbrella) CreateDBTables() *ErrUmbrella {
 
 	err2 := u.orm.CreateTables(&Session{})
 	if err2 != nil {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "CreateDBTables",
 			Err: err2,
 		}
@@ -139,7 +139,7 @@ func (u Umbrella) CreateDBTables() *ErrUmbrella {
 
 	err2 = u.orm.CreateTables(&Permission{})
 	if err2 != nil {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "CreateDBTables",
 			Err: err2,
 		}
@@ -250,10 +250,10 @@ func (u Umbrella) getURIFromRequest(r *http.Request, uri string) string {
 	return xs[0]
 }
 
-func (u Umbrella) GeneratePassword(pass string) (string, *ErrUmbrella) {
+func (u Umbrella) GeneratePassword(pass string) (string, error) {
 	passEncrypted, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
-		return "", &ErrUmbrella{
+		return "", ErrUmbrella{
 			Op:  "GeneratePassword",
 			Err: err,
 		}
@@ -262,7 +262,7 @@ func (u Umbrella) GeneratePassword(pass string) (string, *ErrUmbrella) {
 	return base64.StdEncoding.EncodeToString(passEncrypted), nil
 }
 
-func (u Umbrella) CreateUser(email string, pass string, extraFields map[string]string) (string, *ErrUmbrella) {
+func (u Umbrella) CreateUser(email string, pass string, extraFields map[string]string) (string, error) {
 	pass, err := u.GeneratePassword(pass)
 	if err != nil {
 		return "", err
@@ -290,7 +290,7 @@ func (u Umbrella) CreateUser(email string, pass string, extraFields map[string]s
 
 	err2 := user.Save()
 	if err2 != nil {
-		return "", &ErrUmbrella{
+		return "", ErrUmbrella{
 			Op:  "SaveToDB",
 			Err: err2,
 		}
@@ -299,26 +299,25 @@ func (u Umbrella) CreateUser(email string, pass string, extraFields map[string]s
 	return key, nil
 }
 
-func (u Umbrella) ConfirmEmail(key string) *ErrUmbrella {
+func (u Umbrella) ConfirmEmail(key string) error {
 	user := u.Interfaces.User()
 	got, err := user.GetByEmailActivationKey(key)
-
 	if !got {
 		if err == nil {
-			return &ErrUmbrella{
+			return ErrUmbrella{
 				Op:  "NoRow",
 				Err: nil,
 			}
 		}
 		if err != nil {
-			return &ErrUmbrella{
+			return ErrUmbrella{
 				Op:  "GetFromDB",
 				Err: err,
 			}
 		}
 	}
 	if user.GetFlags()&FlagUserActive == 0 {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "UserInactive",
 			Err: err,
 		}
@@ -328,7 +327,8 @@ func (u Umbrella) ConfirmEmail(key string) *ErrUmbrella {
 	user.SetEmailActivationKey("")
 	err = user.Save()
 	if err != nil {
-		return &ErrUmbrella{
+		log.Print("save to db err")
+		return ErrUmbrella{
 			Op:  "SaveToDB",
 			Err: err,
 		}

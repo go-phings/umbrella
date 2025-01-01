@@ -15,45 +15,26 @@ Package umbrella provides a simple authentication mechanism for an HTTP endpoint
 5. [Motivation](#motivation)
 
 ## Sample code
-The following code snippet shows how the module can be used.
+A working application can be found in the `cmd/example1`. Type `make run-example1` to start an HTTP server and check the endpoints as shown below. jq is used to parse out the token from JSON output, however, it can be done manually as well.
 
-```go
-// database connection
-dbConn, _ = sql.Open("postgres", "host=localhost user=myuser password=mypass port=5432 dbname=mydb sslmode=disable")
+```bash
+# run the application
+% make run-example1
+# ...some output...
 
-// umbrella controller
-u := NewUmbrella(dbConn, "tblprefix_", &JWTConfig{
-  Key: "SomeSecretKey--.",
-  Issuer: "SomeIssuer",
-  ExpirationMinutes: 15,
-}, nil)
+# sign in to get a token
+% UMB_TOKEN=$(curl -s -X POST -d "email=admin@example.com&password=admin" http://localhost:8001/umbrella/login | jq -r '.data.token')
 
-// create db tables
-_ := u.CreateDBTables()
+# call restricted endpoint without the token
+% curl http://localhost:8001/secret_stuff/ 
+YouHaveToBeLoggedIn
 
-// http server
-// uri with registration, activation, login (returns auth token), logout endpoint
-http.Handle("/umbrella/", u.GetHTTPHandler("/umbrella/"))
-// restricted stuff that requires signing in (a token in http header)
-http.Handle("/restricted_stuff/", u.GetHTTPHandlerWrapper(
-  getRestrictedStuffHTTPHandler(),
-  umbrella.HandlerConfig{},
-))
-http.ListenAndServe(":8001", nil)
+# call it again with token
+% curl -H "Authorization: Bearer $UMB_TOKEN" http://localhost:8001/secret_stuff/
+SecretStuffOnlyForAdmin%
 
-// wrap http handler with a check for logged user
-func getRestrictedStuffHTTPHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := umbrella.GetUserIDFromRequest(r)
-		if userID != 0 {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("RestrictedAreaContent"))
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("NoAccess"))
-		}
-	})
-}
+# remove temporary postgresql docker
+make clean
 ```
 
 ## Database connection
