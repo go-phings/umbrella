@@ -7,10 +7,10 @@ type ErrUmbrella struct {
 	Err error
 }
 
-func (e *ErrUmbrella) Error() string {
+func (e ErrUmbrella) Error() string {
 	return e.Err.Error()
 }
 
-func (e *ErrUmbrella) Unwrap() error {
+func (e ErrUmbrella) Unwrap() error {
 	return e.Err
 }

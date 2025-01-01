@@ -369,26 +369,26 @@ func (u Umbrella) writeOK(w http.ResponseWriter, status int, data map[string]int
 	}
 }
 
-func (u Umbrella) login(email string, password string) (string, int64, *ErrUmbrella) {
+func (u Umbrella) login(email string, password string) (string, int64, error) {
 	user := u.Interfaces.User()
 	got, err := user.GetByEmail(email)
 
 	if !got {
 		if err == nil {
-			return "", 0, &ErrUmbrella{
+			return "", 0, ErrUmbrella{
 				Op:  "NoRow",
 				Err: nil,
 			}
 		}
 		if err != nil {
-			return "", 0, &ErrUmbrella{
+			return "", 0, ErrUmbrella{
 				Op:  "GetFromDB",
 				Err: err,
 			}
 		}
 	}
 	if user.GetFlags()&FlagUserActive == 0 || user.GetFlags()&FlagUserAllowLogin == 0 {
-		return "", 0, &ErrUmbrella{
+		return "", 0, ErrUmbrella{
 			Op:  "UserInactive",
 			Err: err,
 		}
@@ -396,14 +396,14 @@ func (u Umbrella) login(email string, password string) (string, int64, *ErrUmbre
 
 	passwordInDBDecoded, err := base64.StdEncoding.DecodeString(user.GetPassword())
 	if err != nil {
-		return "", 0, &ErrUmbrella{
+		return "", 0, ErrUmbrella{
 			Op:  "InvalidPassword",
 			Err: err,
 		}
 	}
 	err = bcrypt.CompareHashAndPassword(passwordInDBDecoded, []byte(password))
 	if err != nil {
-		return "", 0, &ErrUmbrella{
+		return "", 0, ErrUmbrella{
 			Op:  "InvalidPassword",
 			Err: err,
 		}
@@ -412,7 +412,7 @@ func (u Umbrella) login(email string, password string) (string, int64, *ErrUmbre
 	sUUID := uuid.New().String()
 	token, expiresAt, err := u.createToken(sUUID)
 	if err != nil {
-		return "", 0, &ErrUmbrella{
+		return "", 0, ErrUmbrella{
 			Op:  "CreateToken",
 			Err: err,
 		}
@@ -429,7 +429,7 @@ func (u Umbrella) login(email string, password string) (string, int64, *ErrUmbre
 
 	errCrud := u.orm.Save(sess)
 	if errCrud != nil {
-		return "", 0, &ErrUmbrella{
+		return "", 0, ErrUmbrella{
 			Op:  "SaveToDB",
 			Err: errCrud,
 		}
@@ -451,7 +451,7 @@ func (u *Umbrella) getSession(key string) (*Session, error) {
 	return sessions[0].(*Session), nil
 }
 
-func (u Umbrella) logout(token string) *ErrUmbrella {
+func (u Umbrella) logout(token string) error {
 	sID, errUmbrella := u.parseTokenWithCheck(token)
 	if errUmbrella != nil {
 		return errUmbrella
@@ -460,13 +460,13 @@ func (u Umbrella) logout(token string) *ErrUmbrella {
 	session, err := u.getSession(sID)
 	if session == nil {
 		if err == nil {
-			return &ErrUmbrella{
+			return ErrUmbrella{
 				Op:  "NoRow",
 				Err: nil,
 			}
 		}
 		if err != nil {
-			return &ErrUmbrella{
+			return ErrUmbrella{
 				Op:  "GetFromDB",
 				Err: err,
 			}
@@ -474,7 +474,7 @@ func (u Umbrella) logout(token string) *ErrUmbrella {
 	}
 
 	if session.Flags&FlagSessionActive == 0 || session.Flags&FlagSessionLoggedOut > 0 {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "InvalidSession",
 			Err: err,
 		}
@@ -486,7 +486,7 @@ func (u Umbrella) logout(token string) *ErrUmbrella {
 	}
 	errCrud := u.orm.Save(session)
 	if errCrud != nil {
-		return &ErrUmbrella{
+		return ErrUmbrella{
 			Op:  "SaveToDB",
 			Err: errCrud,
 		}
@@ -495,7 +495,7 @@ func (u Umbrella) logout(token string) *ErrUmbrella {
 	return nil
 }
 
-func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrUmbrella) {
+func (u Umbrella) check(token string, refresh bool) (string, int64, int64, error) {
 	sID, errUmbrella := u.parseTokenWithCheck(token)
 	if errUmbrella != nil {
 		return "", 0, 0, errUmbrella
@@ -504,13 +504,13 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 	session, err := u.getSession(sID)
 	if session == nil {
 		if err == nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "InvalidSession",
 				Err: nil,
 			}
 		}
 		if err != nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "GetFromDB",
 				Err: err,
 			}
@@ -518,7 +518,7 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 	}
 
 	if session.Flags&FlagSessionActive == 0 || session.Flags&FlagSessionLoggedOut > 0 {
-		return "", 0, 0, &ErrUmbrella{
+		return "", 0, 0, ErrUmbrella{
 			Op:  "InvalidSession",
 			Err: err,
 		}
@@ -528,20 +528,20 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 	got, err := user.GetByID(session.UserID)
 	if !got {
 		if err == nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "InvalidUser",
 				Err: err,
 			}
 		}
 		if err != nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "GetFromDB",
 				Err: err,
 			}
 		}
 	}
 	if user.GetFlags()&FlagUserActive == 0 || user.GetFlags()&FlagUserAllowLogin == 0 {
-		return "", 0, 0, &ErrUmbrella{
+		return "", 0, 0, ErrUmbrella{
 			Op:  "UserInactive",
 			Err: nil,
 		}
@@ -550,7 +550,7 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 	if refresh {
 		token2, expiresAt, err := u.createToken(sID)
 		if err != nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "CreateToken",
 				Err: err,
 			}
@@ -559,7 +559,7 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 		session.ExpiresAt = expiresAt
 		errCrud := u.orm.Save(session)
 		if errCrud != nil {
-			return "", 0, 0, &ErrUmbrella{
+			return "", 0, 0, ErrUmbrella{
 				Op:  "SaveToDB",
 				Err: errCrud,
 			}
@@ -570,24 +570,24 @@ func (u Umbrella) check(token string, refresh bool) (string, int64, int64, *ErrU
 	return token, 0, session.UserID, nil
 }
 
-func (u Umbrella) parseTokenWithCheck(token string) (string, *ErrUmbrella) {
+func (u Umbrella) parseTokenWithCheck(token string) (string, error) {
 	sID, expired, err := u.parseToken(token)
 	if err != nil {
-		return "", &ErrUmbrella{
+		return "", ErrUmbrella{
 			Op:  "ParseToken",
 			Err: err,
 		}
 	}
 
 	if expired {
-		return "", &ErrUmbrella{
+		return "", ErrUmbrella{
 			Op:  "Expired",
 			Err: err,
 		}
 	}
 
 	if !u.isValidSessionID(sID) {
-		return "", &ErrUmbrella{
+		return "", ErrUmbrella{
 			Op:  "InvalidSession",
 			Err: err,
 		}
